@@ -19,7 +19,7 @@ O Next.js 16 mudou APIs e convenções: antes de usar uma API do Next, confira a
 - Uma história do backlog = uma branch = um PR (D38). Nome da branch: `if-031-cadastro-imovel`.
 - O PR segue `.github/pull_request_template.md`, fecha a issue (`Fecha #N`) e só entra com CI verde e revisão do Alan, por squash.
 - Nenhuma tela de negócio (épicos E3 a E8) antes da IF-013, os testes de isolamento, estar verde (D44).
-- Antes de abrir o PR: `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build`.
+- Antes de abrir o PR: `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build`; se a história mexe no banco, também `pnpm db:reset` e `pnpm test:db`. O CI roda tudo isso e a `main` só aceita merge com ele verde.
 
 ## Segurança
 

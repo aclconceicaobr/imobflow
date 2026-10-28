@@ -20,5 +20,5 @@ Fecha #<!-- número da issue --> · IF-<!-- código -->
 - [ ] Permissão checada na Server Action e na RLS (com teste pgTAP se toca o banco)
 - [ ] Mesmo schema Zod no formulário e no servidor, mensagens em português
 - [ ] Nenhum segredo no navegador; arquivos com chave secreta importam `server-only`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` e `pnpm build` passam
+- [ ] CI verde (lint, tipos, testes, build, banco e pgTAP)
 - [ ] Preview da Vercel testado pelo Alan
