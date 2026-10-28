@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/*
+ * Base mínima até a IF-004, que traz os tokens completos da Fase 3
+ * (temas escuro e claro, Manrope, raios e componentes).
+ */
+@theme {
+  --color-background: #0d0e0b;
+  --color-foreground: #f4f5f0;
+  --color-muted-foreground: #a6a99f;
+  --color-primary: #c6f36b;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}

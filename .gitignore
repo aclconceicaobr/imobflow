@@ -1,0 +1,28 @@
+# dependências
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# testes
+coverage/
+playwright-report/
+test-results/
+
+# variáveis de ambiente (só o .env.example vai para o repositório)
+.env
+.env.*
+!.env.example
+
+# Vercel e Supabase local
+.vercel/
+supabase/.temp/
+supabase/.branches/
+
+# sistema
+.DS_Store
+*.log
