@@ -1,0 +1,112 @@
+name: Deploy do banco
+
+# Aplica as migrações de supabase/migrations nos projetos remotos e só depois
+# publica a produção na Vercel (ver docs/operacao.md, "Fluxo de mudança").
+#
+# - Push na main: homologação automática; produção espera a aprovação manual
+#   do ambiente "production" no Actions quando há migração nova.
+# - Execução manual: aplica a branch escolhida só em homologação, para testar
+#   uma migração no Preview antes do merge.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: db-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detectar migrações novas
+    runs-on: ubuntu-latest
+    outputs:
+      migrations: ${{ steps.diff.outputs.migrations }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - id: diff
+        name: Comparar com o commit anterior
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || \
+             git diff --name-only HEAD^ HEAD | grep -q '^supabase/migrations/'; then
+            echo "migrations=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "migrations=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  staging:
+    name: Migrações em homologação
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Vincular ao projeto de homologação
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Aplicar migrações
+        run: pnpm exec supabase db push
+
+  production:
+    name: Migrações em produção
+    needs: [changes, staging]
+    if: github.event_name == 'push' && needs.changes.outputs.migrations == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # O ambiente "production" exige aprovação manual (Settings → Environments).
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Vincular ao projeto de produção
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Aplicar migrações
+        run: pnpm exec supabase db push
+
+  publish:
+    name: Publicar produção na Vercel
+    needs: [changes, production]
+    # Publica depois das migrações, ou direto quando o push não trouxe nenhuma.
+    if: >-
+      always() && github.event_name == 'push' &&
+      (needs.production.result == 'success' ||
+       (needs.production.result == 'skipped' && needs.changes.outputs.migrations == 'false'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Sem environment: a aprovação manual só vale para as migrações.
+    steps:
+      - name: Disparar o deploy de produção
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "::warning::Secret VERCEL_DEPLOY_HOOK_URL ausente; produção não publicada."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK_URL"
