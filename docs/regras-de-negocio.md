@@ -59,7 +59,7 @@ Os ajustes de [decisoes.md](decisoes.md) complementam estas regras: A7 soma à R
 
 - **RN26.** O formulário exige nome, WhatsApp ou e-mail e aceite da política de privacidade. A data, o IP e a versão do texto aceito são registrados.
 - **RN27.** Limite de 5 envios por IP a cada 10 minutos e de 3 envios por telefone por dia para a mesma organização. O excesso é descartado sem revelar o motivo.
-- **RN28.** Perante a LGPD, a imobiliária é controladora dos dados dos seus leads e o ImobFlow é operador. Isso consta nos Termos de Uso e no contrato de tratamento de dados.
+- **RN28.** Perante a LGPD, a imobiliária é controladora dos dados dos seus leads e o Imobbay é operador. Isso consta nos Termos de Uso e no contrato de tratamento de dados.
 - **RN29.** A organização pode excluir um lead definitivamente a pedido do titular. A exclusão remove dados pessoais e mantém apenas números anonimizados para indicadores.
 
 ## 7.6 IA
