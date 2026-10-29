@@ -1,6 +1,6 @@
 # Operação
 
-Como rodar o projeto, quais variáveis ele precisa e como funcionam os ambientes. Os projetos Supabase e Vercel são criados na IF-003; até lá, o desenvolvimento usa valores locais ou de teste.
+Como rodar o projeto, quais variáveis ele precisa e como funcionam os ambientes. Os ambientes remotos (Supabase e Vercel) estão descritos em [Ambientes](#ambientes) e o passo a passo para montá-los, em [Configurar os ambientes](#configurar-os-ambientes).
 
 ## Rodar localmente
 
@@ -76,14 +76,50 @@ O `next.config.ts` envia em todas as respostas `Content-Security-Policy`, `X-Fra
 
 **Fluxo de mudança**
 
-1. Trabalho em branch, migração criada com `supabase migration new` e testada localmente (`supabase db reset` + testes pgTAP).
-2. *Pull request* roda no GitHub Actions: lint, checagem de tipos, testes unitários, testes de RLS num banco descartável e o build. A Vercel gera o Preview.
-3. Ao aprovar o PR, a migração é aplicada em homologação (`supabase db push`) e testada no Preview.
-4. Merge na `main`: a migração é aplicada em produção por uma etapa manual aprovada no GitHub Actions, e só depois a Vercel publica. Migrações são sempre compatíveis com a versão anterior do código (adicionar antes de remover).
+1. Trabalho em branch, migração criada com `supabase migration new` e testada localmente (`pnpm db:reset` + `pnpm test:db`).
+2. *Pull request* roda o CI: lint, checagem de tipos, testes unitários, testes de RLS num banco descartável e o build. A Vercel gera o Preview, ligado ao Supabase de homologação.
+3. Para testar uma migração no Preview antes do merge, rode o workflow **Deploy do banco** manualmente (Actions → Deploy do banco → Run workflow) escolhendo a branch do PR. Ele aplica as migrações só em homologação.
+4. Ao aprovar o PR, o merge na `main` dispara o mesmo workflow: as migrações novas vão para homologação sozinhas e para produção só depois da aprovação manual do ambiente `production` no Actions. A Vercel publica a produção por último, pelo deploy hook, para o código novo nunca rodar antes do banco. Sem migração nova, a publicação é direta.
 
-**Segredos.** Ficam nas variáveis de ambiente da Vercel (separadas por ambiente) e nos *secrets* do GitHub. Nenhum segredo no repositório; um `.env.example` lista os nomes. As chaves novas do Supabase (`sb_publishable_...` no navegador e `sb_secret_...` no servidor) podem ser revogadas individualmente, o que facilita uma troca de emergência.
+Migrações são sempre compatíveis com a versão anterior do código (adicionar antes de remover). Como os PRs saem com o Alan como autor, a aprovação no próprio GitHub não está disponível; por isso a homologação acompanha o merge, e não a aprovação do PR.
+
+**Segredos.** Ficam nas variáveis de ambiente da Vercel (Preview com as chaves de homologação, Production com as de produção) e nos *secrets* dos ambientes `staging` e `production` do GitHub. Nenhum segredo no repositório; um `.env.example` lista os nomes. As chaves novas do Supabase (`sb_publishable_...` no navegador e `sb_secret_...` no servidor) podem ser revogadas individualmente, o que facilita uma troca de emergência.
 
 **Custos fixos estimados no lançamento:** Supabase Pro (US$ 25/mês), Vercel Pro (US$ 20/mês por membro), domínio e SMTP. O projeto de homologação no Supabase acrescenta o custo de uma instância pequena. Valores aproximados; confirmamos na Fase 5.
+
+## Configurar os ambientes
+
+Feito uma vez por quem administra as contas. Os nomes abaixo são os que o workflow `.github/workflows/db-deploy.yml` e o `vercel.json` esperam.
+
+**1. Supabase.** Crie `imobbay-staging` e `imobbay-prod` em `sa-east-1` (São Paulo), cada um com senha forte do banco. Em cada projeto:
+
+- Authentication → URL Configuration: *Site URL* com o endereço do ambiente (o domínio de produção, ou a URL de Preview da Vercel na homologação) e `https://*-agapp.vercel.app/**` nas *Redirect URLs* da homologação.
+- Authentication → Emails → SMTP Settings: ligue o SMTP próprio (passo 4).
+
+**2. GitHub.** Em Settings → Environments, crie:
+
+| Ambiente | Proteção | Variável (`vars`) | Secrets |
+| --- | --- | --- | --- |
+| `staging` | Nenhuma | `SUPABASE_PROJECT_REF` (ref do `imobbay-staging`) | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` |
+| `production` | *Required reviewers*: Alan; *Deployment branches*: só `main` | `SUPABASE_PROJECT_REF` (ref do `imobbay-prod`) | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` |
+
+O `SUPABASE_ACCESS_TOKEN` é um token pessoal (supabase.com → Account → Access Tokens). Em Settings → Secrets and variables → Actions, crie também o secret de repositório `VERCEL_DEPLOY_HOOK_URL` (passo 3).
+
+**3. Vercel.** Importe o repositório no time Agapp. O `vercel.json` já fixa as funções em `gru1` (São Paulo) e desliga o deploy automático da `main`, que passa a ser feito pelo workflow; os Previews de cada PR continuam automáticos. Depois:
+
+- Settings → Environment Variables: as variáveis da tabela de [Variáveis de ambiente](#variáveis-de-ambiente), com os valores de homologação marcados só para *Preview* e os de produção só para *Production*. As chaves secretas como *Sensitive*.
+- Settings → Git → Deploy Hooks: crie um hook para a branch `main` e salve a URL no secret `VERCEL_DEPLOY_HOOK_URL` do GitHub.
+
+**4. SMTP próprio.** O e-mail padrão do Supabase só envia poucas mensagens por hora e só para a equipe. Usamos o Resend:
+
+1. Crie a conta no Resend, verifique o domínio do Imobbay (registros DNS SPF e DKIM) e gere uma chave de API só com permissão de envio.
+2. No Supabase, em Authentication → Emails → SMTP Settings: host `smtp.resend.com`, porta `465`, usuário `resend`, senha a chave de API, remetente `nao-responda@<domínio>` com nome `Imobbay`.
+3. Em Authentication → Rate Limits, suba o limite de e-mails por hora (o padrão com SMTP próprio é 30).
+4. Teste com "Send magic link" em Authentication → Users: o e-mail precisa chegar em menos de 1 minuto.
+
+Sem domínio verificado, o Resend só entrega para o e-mail dono da conta, o que basta para testar a homologação.
+
+**5. Prova do fluxo.** A migração `supabase/migrations/20261029000000_baseline.sql` não muda nada no banco. Com os passos acima feitos, o merge do PR da IF-003 a leva até homologação e, depois da aprovação, até produção, e a Vercel publica em seguida.
 
 ## Backups
 
