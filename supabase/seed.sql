@@ -1,0 +1,2 @@
+-- Dados de exemplo só para o ambiente local (supabase db reset).
+-- Nunca rode em homologação ou produção. Preenchido a partir da IF-010.

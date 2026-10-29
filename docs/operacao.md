@@ -16,6 +16,9 @@ Como rodar o projeto, quais variáveis ele precisa e como funcionam os ambientes
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | TypeScript sem gerar arquivos |
 | `pnpm test` | Testes unitários (Vitest) |
+| `pnpm db:start` / `pnpm db:stop` | Sobe ou para o Supabase local (precisa de Docker) |
+| `pnpm db:reset` | Recria o banco local do zero: migrações e `seed.sql` |
+| `pnpm test:db` | Testes pgTAP de `supabase/tests` contra o banco local |
 
 ## Variáveis de ambiente
 
@@ -45,6 +48,19 @@ O `next.config.ts` chama `assertEnv()` de `src/lib/env/schema.ts` antes de qualq
 Para desenvolver sem uma conta Cloudflare, use as chaves de teste públicas do Turnstile: site `1x00000000000000000000AA` e secreta `1x0000000000000000000000000000000AA`, que sempre aprovam.
 
 Para adicionar uma variável: declare no `publicSchema` ou no `serverSchema`, acrescente ao `.env.example`, a esta tabela e, se for pública, a `src/lib/env/public.ts`. No código, importe `env` de `@/lib/env` no servidor ou `publicEnv` de `@/lib/env/public` no navegador.
+
+## CI
+
+O workflow `.github/workflows/ci.yml` roda em todo PR e em todo push na `main`, com dois jobs:
+
+| Job | Etapas |
+| --- | --- |
+| App (lint, tipos, testes, build) | `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` |
+| Banco (migrações e pgTAP) | `supabase db start`, `supabase db reset --local`, `supabase test db` |
+
+O job do app usa valores de mentira nas variáveis, só para o build validar o formato; nenhum segredo real entra no CI. O job do banco sobe um Postgres descartável no próprio runner, aplica as migrações do zero e roda os testes pgTAP. O teste `supabase/tests/database/000_rls_enabled.test.sql` falha se qualquer tabela do schema `public` estiver sem RLS.
+
+**Proteção da `main`.** Em Settings → Rules → Rulesets, um ruleset ativo na branch padrão com: exigir pull request antes do merge, exigir as checagens `App (lint, tipos, testes, build)` e `Banco (migrações e pgTAP)` verdes, bloquear push forçado e exclusão. Em Settings → General → Pull Requests, só “Allow squash merging” ligado (D38).
 
 ## Cabeçalhos de segurança
 
