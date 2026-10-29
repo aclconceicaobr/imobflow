@@ -1,6 +1,6 @@
 # Decisões do projeto
 
-Registro das decisões aprovadas pelo Alan em cada fase. Para mudar uma decisão, abra uma issue citando o número dela; o texto aqui só muda junto com a aprovação.
+Registro das decisões aprovadas pelo Alan em cada fase. Em 29/10/2026 o produto mudou de nome, de ImobFlow para **Imobbay**; os documentos das fases foram escritos com o nome antigo. Para mudar uma decisão, abra uma issue citando o número dela; o texto aqui só muda junto com a aprovação.
 
 | Fase | Documento aprovado | Decisões |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ Registro das decisões aprovadas pelo Alan em cada fase. Para mudar uma decisão
 
 | # | Decisão |
 | --- | --- |
-| D37 | Repositório único `aclconceicaobr/imobflow`, com pnpm e Node 24 (o documento previa privado; o repositório foi criado público) |
+| D37 | Repositório único `aclconceicaobr/imobflow`, com pnpm e Node 24. O documento previa privado; em 29/10/2026 o Alan manteve público, porque no plano gratuito do GitHub a proteção da `main` só vale em repositório público |
 | D38 | Uma história, uma branch, um PR; merge por squash com CI verde e revisão do Alan |
 | D39 | O backlog vira GitHub Issues, com marcos Onda 1 e Onda 2 e etiquetas por épico, prioridade e tamanho; cada PR fecha sua issue |
 | D40 | Os ajustes A1 a A9 entram direto nas primeiras migrações (IF-010 e IF-011) |

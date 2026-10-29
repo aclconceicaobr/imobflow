@@ -1,6 +1,6 @@
-# ImobFlow · regras do projeto
+# Imobbay · regras do projeto
 
-CRM imobiliário em SaaS para imobiliárias de até 20 corretores. Toda sessão de IA que gera código neste repositório segue estas regras (D42). As decisões aprovadas estão em `docs/decisoes.md`; as regras de negócio, em `docs/regras-de-negocio.md`.
+Imobbay (antes ImobFlow) é um CRM imobiliário em SaaS para imobiliárias de até 20 corretores. O repositório continua `aclconceicaobr/imobflow`. Toda sessão de IA que gera código neste repositório segue estas regras (D42). As decisões aprovadas estão em `docs/decisoes.md`; as regras de negócio, em `docs/regras-de-negocio.md`.
 
 ## Stack e versões
 

@@ -71,8 +71,8 @@ O `next.config.ts` envia em todas as respostas `Content-Security-Policy`, `X-Fra
 | Ambiente | Next.js | Supabase | Asaas | OpenAI | Dados |
 | --- | --- | --- | --- | --- | --- |
 | Local | `next dev` | Supabase CLI em Docker | Sandbox | Chave de dev com limite baixo | `seed.sql` com dados de exemplo |
-| Homologação | Vercel Preview (cada PR) | Projeto `imobflow-staging` | Sandbox | Chave de dev | Dados de teste, nunca dados reais |
-| Produção | Vercel Production (branch `main`) | Projeto `imobflow-prod`, plano Pro, `sa-east-1` | Conta real | Chave de produção com teto de gasto | Clientes reais |
+| Homologação | Vercel Preview (cada PR) | Projeto `imobbay-staging` | Sandbox | Chave de dev | Dados de teste, nunca dados reais |
+| Produção | Vercel Production (branch `main`) | Projeto `imobbay-prod`, plano Pro, `sa-east-1` | Conta real | Chave de produção com teto de gasto | Clientes reais |
 
 **Fluxo de mudança**
 

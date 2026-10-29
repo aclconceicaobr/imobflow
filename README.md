@@ -1,4 +1,4 @@
-# ImobFlow
+# Imobbay
 
 CRM imobiliário em SaaS para imobiliárias de até 20 corretores: imóveis, leads, funil, agenda, captação e WhatsApp.
 
